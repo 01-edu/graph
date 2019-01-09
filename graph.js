@@ -175,6 +175,70 @@ export const init = (params = {}) => {
     dispatch(actions.removeLink, link)
   }
 
+  const defaultShapePath = {
+    fill: 'none',
+    stroke: 'rgba(255,255,255,0.15)',
+    'stroke-linecap': 'round',
+    'stroke-width': 0.05,
+  }
+  const defaultShapeCircle = {
+    r: 0.15,
+    fill: `#935`,
+  }
+  const testVerticalDash = {
+    r: 0.3,
+    fill: 'none',
+    stroke: 'rgba(255,0,255,1)',
+    'stroke-width': 0.05,
+    'stroke-linecap': "miter",
+    'stroke-dasharray': "0.005,0.015"
+  }
+
+  const drawShape = (x, y, shapeType, custom = {}) => {
+    const radius = custom.r || 0.5
+    const hr = radius / 2
+    let path
+
+    switch(shapeType) {
+      case 'SQUARE':
+        path = `M${x-hr},${y+hr}v${-radius}h${radius}v${radius}z`
+        break
+      case 'DIAMOND':
+        path = `M${x},${y+hr}L${x + hr},${y}L${x},${y - hr}L${x - hr},${y}z`
+        break
+      case 'OCTOGONE':
+        const octoPos = [] 
+        for(let i = 0; i < 8; i++) {
+          octoPos.push([x + hr * Math.cos( (2*i + 1) * Math.PI/8), y + hr * Math.sin( (2*i + 1) * Math.PI/8)])
+        }
+        path = `${octoPos.reduce((p, [x, y]) => (`${p}L${x},${y}`), `M${octoPos[0][0]},${octoPos[0][1]}`)}z`
+        break
+      case 'STAR':
+        const starSmallRadius = hr * (custom.starRatio || 0.5)
+        const starPos = [] 
+        for(let i = 0; i < 8; i++) {
+          starPos.push([x + hr * Math.cos( i * Math.PI/4), y + hr * Math.sin( i * Math.PI/4)])
+          starPos.push([x + starSmallRadius * Math.cos( (2*i + 1) * Math.PI/8), y + starSmallRadius * Math.sin( (2*i + 1) * Math.PI/8)])
+        }
+        path = `${starPos.reduce((p, [x, y]) => (`${p}L${x},${y}`), `M${starPos[0][0]},${starPos[0][1]}`)}z`
+        break
+      case 'CIRCLE':
+        group.appendChild(Circle({ ...defaultShapeCircle, ...custom, cx: x, cy: y }))
+        return
+      default:
+        group.appendChild(Circle({ ...defaultShapeCircle, ...custom, cx: x, cy: y }))
+        return
+    }
+    const shape = {
+      elem: Path({
+        ...defaultShapePath,
+        ...custom,
+        d: path
+      })
+    }
+    group.appendChild(shape.elem)
+  }
+
   const addPoint = (x, y) => {
     const elem = Circle({ cx: x, cy: y, r: 0.15, fill: `#ddd` })
     const key = x * S + y
